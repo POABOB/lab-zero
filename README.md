@@ -268,23 +268,10 @@ go run demo.go
 ## Start a Kubernetes cluster by Kind
 
 ```bash
+# CASE A
 kind create cluster --name lab --config deployment/kind-cluster.yaml
-Creating cluster "lab" ...
- ✓ Ensuring node image (kindest/node:v1.25.3) 🖼 
- ✓ Preparing nodes 📦 📦 📦  
- ✓ Writing configuration 📜 
- ✓ Starting control-plane 🕹️ 
- ✓ Installing CNI 🔌 
- ✓ Installing StorageClass 💾 
- ✓ Joining worker nodes 🚜 
-Set kubectl context to "kind-lab"
-You can now use your cluster with:
-
-kubectl cluster-info --context kind-lab
-
-Have a nice day! 👋 
+# CASE B-E
 ```
-
 
 ## Change HPA sync period
 
@@ -442,7 +429,7 @@ kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mai
 
 ```bash
 istioctl install --set profile=default -y
-kubectl patch deployments.apps -n istio-system istio-ingressgateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy","ports":[{"containerPort":8080,"hostPort":80},{"containerPort":8443,"hostPort":443}]}]}}}}'
+# kubectl patch deployments.apps -n istio-system istio-ingressgateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy","ports":[{"containerPort":8080,"hostPort":80},{"containerPort":8443,"hostPort":443}]}]}}}}'
 ```
 
 2. add a namespace label to instruct Istio to automatically inject Envoy sidecar proxies.
@@ -479,26 +466,16 @@ kubectl create -n istio-system secret tls lab-credential \
 kubectl apply -f ./deployment/case-B.yaml
 ```
 
-
-5. install nginx ingress.
+7. edit the Service type of istio ingress gateway from `LoadBalancer` to `NodePort` and change to port.
 
 ```bash
-# install nginx ingress
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl patch svc istio-ingressgateway -n istio-system --patch-file ./deployment/gateway-svc-patch.yaml
 ```
 
-3. wait it...
+8. delete it...
 
 ```bash
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-```
-
-4. delete it...
-
-```bash
-kubectl delete -f ./deployment/case-A.yaml
-kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl delete -f ./deployment/case-B.yaml
+istioctl uninstall --purge
+kubectl delete -n istio-system secret tls lab-credential
 ```

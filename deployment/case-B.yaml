@@ -376,7 +376,7 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "lab.local.com"
+    - "*"
   - port:
       number: 443
       name: https
@@ -385,7 +385,7 @@ spec:
       mode: SIMPLE
       credentialName: lab-credential # must be the same as secret
     hosts:
-    - lab.local.com
+    - "*"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -393,32 +393,25 @@ metadata:
   name: lab-zero
 spec:
   hosts:
-  - lab.local.com
+  - "*"
   gateways:
-  - istio-system/lab-zero-gateway
+  - lab-zero-gateway
   http:
   - match:
-    - uri:
-        prefix: /v1/orders
-    route:
-    - destination:
-        host: orders
-        port:
-          number: 80
     - uri:
         prefix: /v1/users
     route:
     - destination:
         host: users
         port:
-          number: 80
+            number: 80
 ---
 # 設定全域使用mTLS
-# apiVersion: security.istio.io/v1beta1
-# kind: PeerAuthentication
-# metadata:
-#   name: "default"
-#   namespace: "istio-system"
-# spec:
-#   mtls:
-#     mode: STRICT
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: "default"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT

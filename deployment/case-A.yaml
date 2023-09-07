@@ -377,10 +377,3 @@ spec:
               name: users
               port:
                 number: 80
-        - pathType: Prefix
-          path: /v1/orders
-          backend:
-            service:
-              name: orders
-              port:
-                number: 80
