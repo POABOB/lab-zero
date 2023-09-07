@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package orders;
+option go_package="./orders";
+
+import "google/protobuf/timestamp.proto"; // 使用timestamp
+import "google/api/annotations.proto";     // 使用 Restful API
+import "validate/validate.proto";
+
+message GetOrdersByUserIdRequest {
+  int64 user_id = 1 [ (validate.rules).int64.gt = 0 ];
+  // int64 user_id = 1;
+}
+
+message UserOrders {
+  int64 buyer_id = 1;
+  int64 seller_id = 2;
+  int64 seller_account = 3;
+  int64 good_id = 4;
+  int64 good_name = 5;
+  int32 good_price = 6;
+  int32 status = 7;
+  string remark = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+  google.protobuf.Timestamp deleted_at = 11;
+}
+
+message GetOrdersByUserIdResponse {
+  bool status = 1;
+  string message = 2;
+  repeated UserOrders data = 3;
+}
+
+service Orders {
+  rpc GetOrdersByUserId(GetOrdersByUserIdRequest)
+      returns (GetOrdersByUserIdResponse) {
+    option (google.api.http) = {
+      get : "/v1/orders"
+      body : "*"
+    };
+  };
+}

@@ -1,0 +1,23 @@
+Name: orders.rpc
+ListenOn: 0.0.0.0:8888
+Timeout: 5000000
+OrdersRpc:
+  Endpoints:
+    - orders:8888
+  NonBlock: true
+UsersServiceRpc:
+  Endpoints:
+    - users:8888
+  NonBlock: true
+Mode: dev
+Gateway:
+  Name: gateway
+  Port: 80
+  Timeout: 5000000
+  Upstreams:
+    - Grpc:
+        Target: 0.0.0.0:8888
+      ProtoSet: orders.pb
+RedisConf:
+  Host: redis:6379
+  Type: node

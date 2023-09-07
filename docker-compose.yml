@@ -1,0 +1,12 @@
+version: "3"
+
+
+services:
+  redis_1:
+    restart: always
+    container_name: redis_1
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - /tmp/redis-data:/data

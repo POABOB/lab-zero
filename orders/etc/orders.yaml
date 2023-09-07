@@ -1,0 +1,34 @@
+Name: orders.rpc
+ListenOn: 0.0.0.0:8890
+Timeout: 5000000
+OrdersRpc:
+  Endpoints:
+    - 127.0.0.1:8890
+  NonBlock: true
+UsersServiceRpc:
+  Endpoints:
+    - 127.0.0.1:8888
+  NonBlock: true
+Mode: dev
+# 不使用etcd
+# Etcd:
+#   Hosts:
+#   - 127.0.0.1:2379
+#   Key: users.rpc
+Gateway:
+  Name: gateway
+  Port: 81
+  Timeout: 5000000
+  Upstreams:
+    - Grpc:
+        Target: 0.0.0.0:8890
+      ProtoSet: orders.pb
+RedisConf:
+  Host: 127.0.0.1:6379
+  Type: node
+ServerMiddlewaresConf:
+  Trace: false
+  Recover: true
+  Stat: false
+  Prometheus: false
+  Breaker: false

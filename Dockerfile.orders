@@ -1,0 +1,41 @@
+# Build Stage
+FROM golang:1.19-alpine AS builder
+
+# 建立環境變數
+ENV GO111MODULE=auto \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+# 指定工作目錄
+WORKDIR /app/go/
+
+# 把當前專案複製到/app/go裡
+COPY . /app/go
+
+# 安裝環境依賴函式庫
+RUN go mod tidy \
+    && go mod download \
+    && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o orders.output ./orders/*.go
+
+# Deploy Stage
+FROM alpine:3.16.2 AS prod
+
+# 指定工作目錄
+WORKDIR /app/go/
+
+COPY --from=builder /app/go/orders.output /app/go/orders.output
+COPY --from=builder /app/go/orders/etc/orders-prod.yaml /app/go/etc/orders.yaml
+
+# https://www.dotblogs.com.tw/I_know_why_I_am/2021/06/06/210630
+RUN apk add libcap && setcap 'cap_net_bind_service=+ep' /app/go/orders.output
+
+# 
+USER 1000
+
+# 暴露端口
+EXPOSE 80
+EXPOSE 8888
+
+# 執行
+CMD ["/app/go/orders.output"]

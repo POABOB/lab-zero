@@ -1,0 +1,31 @@
+Name: users.rpc
+ListenOn: 0.0.0.0:8888
+Timeout: 5000000
+UsersServiceRpc:
+  Endpoints:
+    - 127.0.0.1:8888
+  NonBlock: true
+OrdersServiceRpc:
+  Endpoints:
+    - 127.0.0.1:8890
+  NonBlock: true
+Mode: dev
+# 不使用etcd
+# Etcd:
+#   Hosts:
+#   - 127.0.0.1:2379
+#   Key: users.rpc
+Gateway:
+  Name: gateway
+  Port: 80
+  Timeout: 5000000
+  Upstreams:
+    - Grpc:
+        Target: 0.0.0.0:8888
+      ProtoSet: users.pb
+ServerMiddlewaresConf:
+  Trace: false
+  Recover: true
+  Stat: false
+  Prometheus: false
+  Breaker: false

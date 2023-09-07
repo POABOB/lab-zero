@@ -1,0 +1,23 @@
+# three node (two workers) cluster config
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 30000
+    hostPort: 80
+    listenAddress: "0.0.0.0"  
+  - containerPort: 31000
+    hostPort: 443
+    listenAddress: "0.0.0.0" 
+  - containerPort: 32000
+    hostPort: 15021
+    listenAddress: "0.0.0.0"
+- role: worker
+- role: worker
