@@ -271,6 +271,7 @@ go run demo.go
 # CASE A
 kind create cluster --name lab --config deployment/kind-cluster.yaml
 # CASE B-E
+kind create cluster --name lab --config deployment/kind-cluster-istio.yaml
 ```
 
 ## Change HPA sync period
