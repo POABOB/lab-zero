@@ -426,7 +426,7 @@ kubectl delete -f ./deployment/case-A.yaml
 kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 ```
 
-## Set up Case B
+## Set up Case B/C
 
 1. install istio and set the default  configuration profile.
 
@@ -482,7 +482,7 @@ istioctl uninstall --purge
 kubectl delete -n istio-system secret tls lab-credential
 ```
 
-## Set up Case D
+## Set up Case D/E
 
 1. install istio and set the default  configuration profile.
 
@@ -490,27 +490,21 @@ kubectl delete -n istio-system secret tls lab-credential
 istioctl install --set profile=ambient --set components.ingressGateways[0].enabled=true --set components.ingressGateways[0].name=istio-ingressgateway --skip-confirmation
 ```
 
-2. add a namespace label to instruct Istio to automatically inject Envoy sidecar proxies.
-
-```bash
-kubectl label namespace default istio.io/dataplane-mode=ambient
-```
-
-3. create a root certificate and private key to sign the certificates for our services.
+2. create a root certificate and private key to sign the certificates for our services.
 
 ```bash
 mkdir certs
 openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=local Inc./CN=local.com' -keyout certs/local.com.key -out certs/local.com.crt
 ```
 
-4. generate a certificate and a private key for lab.local.com.
+3. generate a certificate and a private key for lab.local.com.
 
 ```bash
 openssl req -out certs/lab.local.com.csr -newkey rsa:2048 -nodes -keyout certs/lab.local.com.key -subj "/CN=lab.local.com/O=lab organization"
 openssl x509 -req -sha256 -days 365 -CA certs/local.com.crt -CAkey certs/local.com.key -set_serial 0 -in certs/lab.local.com.csr -out certs/lab.local.com.crt
 ```
 
-5. create a secret for the ingress gateway
+4. create a secret for the ingress gateway
 
 ```bash
 kubectl create -n istio-system secret tls lab-credential \
@@ -518,22 +512,41 @@ kubectl create -n istio-system secret tls lab-credential \
   --cert=certs/lab.local.com.crt
 ```
 
-6. install microservices and redis.
+5. install microservices and redis.
 
 ```bash
-kubectl apply -f ./deployment/case-B.yaml
+kubectl apply -f ./deployment/case-D.yaml
 ```
 
-7. edit the Service type of istio ingress gateway from `LoadBalancer` to `NodePort` and change to port.
+6. edit the Service type of istio ingress gateway from `LoadBalancer` to `NodePort` and change to port.
 
 ```bash
 kubectl patch svc istio-ingressgateway -n istio-system --patch-file ./deployment/gateway-svc-patch.yaml
 ```
 
-8. delete it...
+7. add a namespace label to instruct Istio to automatically inject Envoy sidecar proxies.
+
+```bash
+kubectl label namespace default istio.io/dataplane-mode=ambient
+```
+
+8. deploy a waypoint proxy for the services(just for case E)
+
+```bash
+istioctl x waypoint apply --service-account lab-zero-orders
+istioctl x waypoint apply --service-account lab-zero-users
+istioctl x waypoint apply --service-account lab-zero-redis
+```
+
+9. delete it...
 
 ```bash
 kubectl delete -f ./deployment/case-B.yaml
 istioctl uninstall --purge
 kubectl delete -n istio-system secret tls lab-credential
+# just for case E
+istioctl x waypoint delete --service-account lab-zero-orders
+istioctl x waypoint delete --service-account lab-zero-users
+istioctl x waypoint delete --service-account lab-zero-redis
 ```
+

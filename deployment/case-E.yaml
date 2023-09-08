@@ -1,0 +1,480 @@
+# Orders service
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+  labels:
+    app: orders
+    service: orders
+spec:
+  ports:
+  - name: http
+    port: 80
+  - name: grpc
+    port: 8888
+  selector:
+    app: orders
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lab-zero-orders
+  labels:
+    account: orders
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-v1
+  labels:
+    app: orders
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orders
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: orders
+        version: v1
+    spec:
+      serviceAccountName: lab-zero-orders
+      containers:
+      - name: orders
+        image: docker.io/poabob/orders:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+          requests:
+            cpu: 200m
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: grpc
+          containerPort: 8888
+          protocol: TCP
+        securityContext:
+          runAsUser: 1000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orders-v1
+  labels:
+    app: orders
+    version: v1
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orders-v1
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 600
+    scaleUp:
+      policies:
+      - type: Percent
+        value: 900
+        periodSeconds: 5
+      - type: Pods
+        value: 4
+        periodSeconds: 5
+---
+# Users service
+apiVersion: v1
+kind: Service
+metadata:
+  name: users
+  labels:
+    app: users
+    service: users
+spec:
+  ports:
+  - name: http
+    port: 80
+  - name: grpc
+    port: 8888
+    targetPort: 8888
+  selector:
+    app: users
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lab-zero-users
+  labels:
+    account: users
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-v1
+  labels:
+    app: users
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: users
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: users
+        version: v1
+    spec:
+      serviceAccountName: lab-zero-users
+      containers:
+      - name: users
+        image: docker.io/poabob/users:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+          requests:
+            cpu: 200m
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: grpc
+          containerPort: 8888
+          protocol: TCP
+        securityContext:
+          runAsUser: 1000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: users-v1
+  labels:
+    app: users
+    version: v1
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: users-v1
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 600
+    scaleUp:
+      policies:
+      - type: Percent
+        value: 900
+        periodSeconds: 5
+      - type: Pods
+        value: 4
+        periodSeconds: 5
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lab-zero-redis
+  labels:
+    account: redis
+---
+# redis
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis.conf: |
+    # masterauth a-very-complex-password-here
+    # requirepass a-very-complex-password-here
+    bind 0.0.0.0
+    protected-mode no
+    port 6379
+    tcp-backlog 511
+    timeout 0
+    tcp-keepalive 300
+    daemonize no
+    pidfile /var/run/redis_6379.pid
+    loglevel notice
+    logfile ""
+    databases 16
+    always-show-logo no
+    set-proc-title yes
+    proc-title-template "{title} {listen-addr} {server-mode}"
+    save 900 1 300 10 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    rdb-del-sync-files no
+    dir /data
+    replica-serve-stale-data yes
+    replica-read-only yes
+    repl-diskless-sync yes
+    repl-diskless-sync-delay 5
+    repl-diskless-sync-max-replicas 0
+    repl-diskless-load disabled
+    repl-disable-tcp-nodelay no
+    replica-priority 100
+    acllog-max-len 128
+    lazyfree-lazy-eviction no
+    lazyfree-lazy-expire no
+    lazyfree-lazy-server-del no
+    replica-lazy-flush no
+    lazyfree-lazy-user-del no
+    lazyfree-lazy-user-flush no
+    oom-score-adj no
+    oom-score-adj-values 0 200 800
+    disable-thp yes
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appenddirname "appendonlydir"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    aof-timestamp-enabled no
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    latency-monitor-threshold 0
+    notify-keyspace-events ""
+    hash-max-listpack-entries 512
+    hash-max-listpack-value 64
+    list-max-listpack-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-listpack-entries 128
+    zset-max-listpack-value 64
+    hll-sparse-max-bytes 3000
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    dynamic-hz yes
+    aof-rewrite-incremental-fsync yes
+    rdb-save-incremental-fsync yes
+    jemalloc-bg-thread yes
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      initContainers:
+      - name: config
+        image: redis:7.0.10-alpine
+        command: [ "sh", "-c" ]
+        args:
+          - |
+            cp /tmp/redis/redis.conf /etc/redis/redis.conf
+            
+            echo "finding master..."
+            MASTER_FDQN=`hostname  -f | sed -e 's/redis-[0-9]\./redis-0./'`
+            if [ "$(redis-cli -h sentinel -p 5000 ping)" != "PONG" ]; then
+              echo "master not found, defaulting to redis-0"
+
+              if [ "$(hostname)" = "redis-0" ]; then
+                echo "this is redis-0, not updating config..."
+              else
+                echo "updating redis.conf..."
+                echo "replicaof $MASTER_FDQN 6379" >> /etc/redis/redis.conf
+              fi
+            else
+              echo "sentinel found, finding master"
+              MASTER="$(redis-cli -h sentinel -p 5000 sentinel get-master-addr-by-name mymaster | grep -E '(^redis-\d{1,})|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})')"
+              echo "master found : $MASTER, updating redis.conf"
+              echo "replicaof $MASTER 6379" >> /etc/redis/redis.conf
+            fi
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis/
+        - name: config
+          mountPath: /tmp/redis/
+      serviceAccountName: lab-zero-redis
+      containers:
+      - name: redis
+        image: redis:7.0.10-alpine
+        command: ["redis-server"]
+        args: ["/etc/redis/redis.conf"]
+        ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: redis-config
+          mountPath: /etc/redis/
+      volumes:
+      - name: redis-config
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: redis-config
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+  selector:
+    app: redis
+---
+# gateway
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: lab-zero-gateway
+spec:
+  # The selector matches the ingress gateway pod labels.
+  # If you installed Istio using Helm following the standard documentation, this would be "istio=ingress"
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - "*"
+    tls:
+      mode: SIMPLE
+      credentialName: lab-credential # must be the same as secret   
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: lab-zero-users-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - lab-zero-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /v1/users
+    route:
+    retries:
+      attempts: 3
+      perTryTimeout: 5s
+      # 可以指定在特定狀況下才進行 retry
+      retryOn: connect-failure,reset,retriable-4xx
+    timeout: 5s
+    - destination:
+        host: users
+        port:
+            number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: lab-zero-vs
+spec:
+  hosts: 
+  - orders.default.svc.cluster.local
+  - redis.default.svc.cluster.local
+  gateways:
+  - lab-zero-gateway
+  http:
+    retries:
+      attempts: 3
+      perTryTimeout: 5s
+      # 可以指定在特定狀況下才進行 retry
+      retryOn: connect-failure,reset,retriable-4xx
+    timeout: 5s
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: lab-zero-dr
+spec:
+  host: 
+  - users.default.svc.cluster.local
+  - orders.default.svc.cluster.local
+  - redis.default.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      http:
+        http2MaxPendingRequests: 1000
+    outlierDetection:
+      baseEjectionTime: 15s
+      consecutive5xxErrors: 100
+      interval: 1s
+      maxEjectionPercent: 30
+---
+# 設定全域使用mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT
+---
