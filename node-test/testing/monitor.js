@@ -28,7 +28,7 @@ async function monitor() {
                 : value
         )
         // append JSON string to a file
-        fs.appendFile(`resouce-${baseTime}.json`, data + "\r\n" , function (err) {
+        fs.appendFile(`case-D-resouce-breakpoint-1.json`, data + "\r\n" , function (err) {
             if (err) throw err;
             console.log(`The "data to append" was appended to file! line: ${line}, datetime: ${sentTime}.`);
         });

@@ -1,6 +1,6 @@
 const events = require('events'), fs = require('fs'), readline = require('readline'), path = require('node:path');
 const argv = require('minimist')(process.argv.slice(2));
-const filename = argv._[0] ?? '../raw_data/resouce-breakpoint.json';
+const filename = argv._[0] ?? '../raw_data/case-D-resouce-breakpoint-1.json';
 const title = argv['t'] ?? `Stress Test Report - ${new Date().toLocaleString('en-US')}`;
 const chartsDir = argv['d'] ?? 'charts';
 if (!fs.existsSync(chartsDir)) fs.mkdirSync(chartsDir);
@@ -17,7 +17,7 @@ const chartOpt = {
 };
 
 // TODO 要自己定義
-let baseTime = "2023-09-06T04:31:17.690Z";
+let baseTime = "2023-09-07T05:03:08.611Z";
 let pointsArr = [], errors = [];
 const toHHmmss = d => d.toLocaleTimeString('en-US', { hour12: false });
 (async function processLineByLine() {
@@ -69,12 +69,12 @@ const toHHmmss = d => d.toLocaleTimeString('en-US', { hour12: false });
       labels.push(timespan)
       podsNums.push(element.data.length)
       element.data.forEach(data => {
-        let podName = data.POD + "-CPU"
+        let podName = data.POD.split("-")[0] + "-" + data.POD.split("-")[3];
         let index = podLabel.findIndex(d => d === podName)
         if(index === -1) {
           podLabel.push(podName)
           index= podLabel.length - 1
-          for(let i = 0; i < labels.length - 1; i++) pods[index].push(0)
+          for(let i = 0; i < labels.length - 1; i++) pods[index].push(null)
         }
         pods[index].push(data.CPU)
 

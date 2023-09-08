@@ -280,8 +280,10 @@ In order to make the HPA controller scale faster, we need change the period of `
 We need change this config to 5s.
 
 ```bash
-# access control-panel
+# access control-panel for mac and linux
 docker exec -it lab-control-plane bash
+# access control-panel for win
+winpty docker exec -it lab-control-plane bash
 
 # edit it
 apt update
@@ -430,13 +432,68 @@ kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mai
 
 ```bash
 istioctl install --set profile=default -y
-# kubectl patch deployments.apps -n istio-system istio-ingressgateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy","ports":[{"containerPort":8080,"hostPort":80},{"containerPort":8443,"hostPort":443}]}]}}}}'
 ```
 
 2. add a namespace label to instruct Istio to automatically inject Envoy sidecar proxies.
 
 ```bash
 kubectl label namespace default istio-injection=enabled
+```
+
+3. create a root certificate and private key to sign the certificates for our services.
+
+```bash
+mkdir certs
+openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=local Inc./CN=local.com' -keyout certs/local.com.key -out certs/local.com.crt
+```
+
+4. generate a certificate and a private key for lab.local.com.
+
+```bash
+openssl req -out certs/lab.local.com.csr -newkey rsa:2048 -nodes -keyout certs/lab.local.com.key -subj "/CN=lab.local.com/O=lab organization"
+openssl x509 -req -sha256 -days 365 -CA certs/local.com.crt -CAkey certs/local.com.key -set_serial 0 -in certs/lab.local.com.csr -out certs/lab.local.com.crt
+```
+
+5. create a secret for the ingress gateway
+
+```bash
+kubectl create -n istio-system secret tls lab-credential \
+  --key=certs/lab.local.com.key \
+  --cert=certs/lab.local.com.crt
+```
+
+6. install microservices and redis.
+
+```bash
+kubectl apply -f ./deployment/case-B.yaml
+```
+
+7. edit the Service type of istio ingress gateway from `LoadBalancer` to `NodePort` and change to port.
+
+```bash
+kubectl patch svc istio-ingressgateway -n istio-system --patch-file ./deployment/gateway-svc-patch.yaml
+```
+
+8. delete it...
+
+```bash
+kubectl delete -f ./deployment/case-B.yaml
+istioctl uninstall --purge
+kubectl delete -n istio-system secret tls lab-credential
+```
+
+## Set up Case D
+
+1. install istio and set the default  configuration profile.
+
+```bash
+istioctl install --set profile=ambient --set components.ingressGateways[0].enabled=true --set components.ingressGateways[0].name=istio-ingressgateway --skip-confirmation
+```
+
+2. add a namespace label to instruct Istio to automatically inject Envoy sidecar proxies.
+
+```bash
+kubectl label namespace default istio.io/dataplane-mode=ambient
 ```
 
 3. create a root certificate and private key to sign the certificates for our services.

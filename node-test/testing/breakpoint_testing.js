@@ -5,7 +5,7 @@ import { getCurrentStageIndex } from 'https://jslib.k6.io/k6-utils/1.3.0/index.j
 
 // 每 10 秒增加 50 個 User，直到 RPS 到達 1000
 const stages = [];
-for (let t = 50; t <= 1000; t += 50) {
+for (let t = 50; t <= 2000; t += 100) {
   stages.push({ duration: '5s', target: t }, { duration: '5s', target: t });
 }
 stages.push({ duration: '30s', target: 0 })
@@ -32,7 +32,7 @@ export const options = {
 
 // const jsonPayload = `{"user_id":1}`;
 export default function() {
-  let res = http.get(`http://lab.local.com/v1/users/info?user_id=1`, {
+  let res = http.get(`https://lab.local.com/v1/users/info?user_id=1`, {
     tags: { 
       sentTime: new Date().toISOString(), 
       target: stages[getCurrentStageIndex()].target

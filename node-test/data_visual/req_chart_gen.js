@@ -1,8 +1,8 @@
 const events = require('events'), fs = require('fs'), readline = require('readline'), path = require('node:path');
 const argv = require('minimist')(process.argv.slice(2));
-const filename = argv._[0] ?? path.resolve('../raw_data/request-breakpoint.json');
+const filename = argv._[0] ?? path.resolve('../raw_data/case-D-request-breakpoint-1.json');
 const title = argv['t'] ?? `Stress Test Report - ${new Date().toLocaleString('en-US')}`;
-const chartsDir = argv['d'] ?? '../../charts';
+const chartsDir = argv['d'] ?? '../charts';
 if (!fs.existsSync(chartsDir)) fs.mkdirSync(chartsDir);
 const htmlPath = path.resolve(chartsDir, argv['f'] ?? `req_chart-${new Date().toISOString().replace(/[-T:.Z]/g, '')}.html`);
 
@@ -116,6 +116,6 @@ class Point {
   errCodes = {};
   constructor(time) {
     this.time = toHHmmss(time);
-    this.timespan = new Date(time - baseTime).toUTCString().match(/\d\d:(\d\d:\d\d)/)[1];
+    this.timespan = new Date(time - baseTime).toUTCString().match(/(\d\d:\d\d:\d\d)/)[1];
   }
 }
