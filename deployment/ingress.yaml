@@ -1,0 +1,20 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: ingress
+spec:
+  profile: empty # 不安装 CRD 或控制平面
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      enabled: true
+      label:
+        # 为网关设置唯一标签。
+        # 这是确保 Gateway 可以选择此工作负载所必需的。
+        istio: ingressgateway
+  values:
+    gateways:
+      istio-ingressgateway:
+        # 启用网关注入
+        injectionTemplate: gateway

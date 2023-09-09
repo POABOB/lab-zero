@@ -407,23 +407,16 @@ kubectl apply -f ./deployment/case-A.yaml
 
 ```bash
 # install nginx ingress
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-```
-
-3. wait it...
-
-```bash
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
+kubectl create namespace istio-system
+istioctl install -f ingress.yaml
+kubectl patch svc istio-ingressgateway -n istio-system --patch-file ./deployment/gateway-svc-patch.yaml
 ```
 
 4. delete it...
 
 ```bash
 kubectl delete -f ./deployment/case-A.yaml
-kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+istioctl uninstall --purge
 ```
 
 ## Set up Case B/C

@@ -438,6 +438,7 @@ spec:
   gateways:
   - lab-zero-gateway
   http:
+    # 峰值測試不使用try
     retries:
       attempts: 3
       perTryTimeout: 5s

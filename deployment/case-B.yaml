@@ -85,7 +85,7 @@ spec:
       policies:
       - type: Pods
         value: 1
-        periodSeconds: 600
+        periodSeconds: 300
     scaleUp:
       policies:
       - type: Percent
@@ -182,7 +182,7 @@ spec:
       policies:
       - type: Pods
         value: 1
-        periodSeconds: 600
+        periodSeconds: 300
     scaleUp:
       policies:
       - type: Percent
@@ -376,7 +376,7 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "*"
+    - lab.local.com
   - port:
       number: 443
       name: https
@@ -385,7 +385,7 @@ spec:
       mode: SIMPLE
       credentialName: lab-credential # must be the same as secret
     hosts:
-    - "*"
+    - lab.local.com
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -393,13 +393,14 @@ metadata:
   name: lab-zero
 spec:
   hosts:
-  - "*"
+  - lab.local.com
   gateways:
   - lab-zero-gateway
   http:
   - match:
     - uri:
         prefix: /v1/users
+    timeout: 600s
     route:
     - destination:
         host: users

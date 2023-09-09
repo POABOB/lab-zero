@@ -1,6 +1,6 @@
 const events = require('events'), fs = require('fs'), readline = require('readline'), path = require('node:path');
 const argv = require('minimist')(process.argv.slice(2));
-const filename = argv._[0] ?? '../raw_data/case-D-resouce-breakpoint-1.json';
+const filename = argv._[0] ?? '../raw_data/case-E-resouce-breakpoint-3.json';
 const title = argv['t'] ?? `Stress Test Report - ${new Date().toLocaleString('en-US')}`;
 const chartsDir = argv['d'] ?? 'charts';
 if (!fs.existsSync(chartsDir)) fs.mkdirSync(chartsDir);
@@ -17,7 +17,7 @@ const chartOpt = {
 };
 
 // TODO 要自己定義
-let baseTime = "2023-09-07T05:03:08.611Z";
+let baseTime = "2023-09-09T10:35:30.508Z";
 let pointsArr = [], errors = [];
 const toHHmmss = d => d.toLocaleTimeString('en-US', { hour12: false });
 (async function processLineByLine() {
@@ -70,6 +70,7 @@ const toHHmmss = d => d.toLocaleTimeString('en-US', { hour12: false });
       podsNums.push(element.data.length)
       element.data.forEach(data => {
         let podName = data.POD.split("-")[0] + "-" + data.POD.split("-")[3];
+        if(podName.slice(0, 1) === "l") podName = data.POD.split("-")[4] + "-" + data.POD.split("-")[2];
         let index = podLabel.findIndex(d => d === podName)
         if(index === -1) {
           podLabel.push(podName)
@@ -98,6 +99,8 @@ const toHHmmss = d => d.toLocaleTimeString('en-US', { hour12: false });
           chartOpt.addDataSet(`${podLabel[index]}`, pod, podColors[index], false, 'y1');
         } else if(podLabel[index].slice(0, 1) === "o") {
           chartOpt.addDataSet(`${podLabel[index]}`, pod, podColors[index], false, 'y2');
+        } else if(podLabel[index].slice(0, 1) === "w") {
+          chartOpt.addDataSet(`${podLabel[index]}`, pod, podColors[index], false, 'y4');
         }
       }
     })

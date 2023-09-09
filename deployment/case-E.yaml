@@ -405,7 +405,7 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: lab-zero-users-vs
+  name: lab-zero-vs-users
 spec:
   hosts:
   - "*"
@@ -415,13 +415,13 @@ spec:
   - match:
     - uri:
         prefix: /v1/users
-    route:
     retries:
       attempts: 3
       perTryTimeout: 5s
       # 可以指定在特定狀況下才進行 retry
       retryOn: connect-failure,reset,retriable-4xx
     timeout: 5s
+    route:
     - destination:
         host: users
         port:
@@ -430,30 +430,55 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: lab-zero-vs
+  name: lab-zero-vs-orders
 spec:
   hosts: 
   - orders.default.svc.cluster.local
-  - redis.default.svc.cluster.local
   gateways:
   - lab-zero-gateway
   http:
+  - name: "orders-routes"
     retries:
       attempts: 3
       perTryTimeout: 5s
       # 可以指定在特定狀況下才進行 retry
       retryOn: connect-failure,reset,retriable-4xx
     timeout: 5s
+    route:
+    - destination:
+        host: orders
+        port:
+            number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: lab-zero-vs-redis
+spec:
+  hosts: 
+  - redis.default.svc.cluster.local
+  gateways:
+  - lab-zero-gateway
+  http:
+  - name: "redis-routes"
+    retries:
+      attempts: 3
+      perTryTimeout: 5s
+      # 可以指定在特定狀況下才進行 retry
+      retryOn: connect-failure,reset,retriable-4xx
+    timeout: 5s
+    route:
+    - destination:
+        host: redis
+        port:
+            number: 80
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: lab-zero-dr
+  name: lab-zero-dr-users
 spec:
-  host: 
-  - users.default.svc.cluster.local
-  - orders.default.svc.cluster.local
-  - redis.default.svc.cluster.local
+  host: users.default.svc.cluster.local
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
@@ -461,7 +486,47 @@ spec:
       simple: LEAST_REQUEST
     connectionPool:
       http:
-        http2MaxPendingRequests: 1000
+        http2MaxRequests: 1000
+    outlierDetection:
+      baseEjectionTime: 15s
+      consecutive5xxErrors: 100
+      interval: 1s
+      maxEjectionPercent: 30
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: lab-zero-dr-orders
+spec:
+  host: orders.default.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      http:
+        http2MaxRequests: 1000
+    outlierDetection:
+      baseEjectionTime: 15s
+      consecutive5xxErrors: 100
+      interval: 1s
+      maxEjectionPercent: 30
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: lab-zero-dr-redis
+spec:
+  host: redis.default.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      http:
+        http2MaxRequests: 1000
     outlierDetection:
       baseEjectionTime: 15s
       consecutive5xxErrors: 100

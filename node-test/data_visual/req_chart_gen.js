@@ -1,6 +1,6 @@
 const events = require('events'), fs = require('fs'), readline = require('readline'), path = require('node:path');
 const argv = require('minimist')(process.argv.slice(2));
-const filename = argv._[0] ?? path.resolve('../raw_data/case-D-request-breakpoint-1.json');
+const filename = argv._[0] ?? path.resolve('../raw_data/case-E-request-breakpoint-3.json');
 const title = argv['t'] ?? `Stress Test Report - ${new Date().toLocaleString('en-US')}`;
 const chartsDir = argv['d'] ?? '../charts';
 if (!fs.existsSync(chartsDir)) fs.mkdirSync(chartsDir);
