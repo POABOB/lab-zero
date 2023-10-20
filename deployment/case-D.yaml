@@ -30,7 +30,7 @@ metadata:
     app: orders
     version: v1
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: orders
@@ -73,8 +73,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: orders-v1
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 4
+  maxReplicas: 20
   metrics:
   - type: Resource
     resource:
@@ -91,7 +91,7 @@ spec:
     scaleUp:
       policies:
       - type: Percent
-        value: 900
+        value: 300
         periodSeconds: 5
       - type: Pods
         value: 4
@@ -130,7 +130,7 @@ metadata:
     app: users
     version: v1
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: users
@@ -173,8 +173,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: users-v1
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 4
+  maxReplicas: 20
   metrics:
   - type: Resource
     resource:
@@ -191,7 +191,7 @@ spec:
     scaleUp:
       policies:
       - type: Percent
-        value: 900
+        value: 300
         periodSeconds: 5
       - type: Pods
         value: 4
