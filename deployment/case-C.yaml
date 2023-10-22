@@ -74,7 +74,7 @@ spec:
     kind: Deployment
     name: orders-v1
   minReplicas: 4
-  maxReplicas: 20
+  maxReplicas: 16
   metrics:
   - type: Resource
     resource:
@@ -170,7 +170,7 @@ spec:
     kind: Deployment
     name: users-v1
   minReplicas: 4
-  maxReplicas: 20
+  maxReplicas: 16
   metrics:
   - type: Resource
     resource:
