@@ -5,14 +5,14 @@ export const options = {
   // Key configurations for spike in this section
   stages: [
     
-    { duration: '30s', target: 100 }, // quick ramp-down to 0 users
+    { duration: '30s', target: 100 },
     { duration: '1m', target: 2000 }, // fast ramp-up to a high point
     { duration: '30s', target: 100 },
     { duration: '1m', target: 2000 },
     { duration: '30s', target: 100 },
     { duration: '1m', target: 2000 },
     // No plateau
-    { duration: '1m', target: 0 }, // quick ramp-down to 0 users
+    { duration: '30s', target: 100 },
   ],
 };
 
