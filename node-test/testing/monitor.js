@@ -25,12 +25,15 @@ async function monitor() {
         });
         const podsColumns2 = topPodsRes2.map((pod) => {
             const mem = (pod.Memory.CurrentUsage.toString()).slice(0, -1)
-            return {
-                sentTime: sentTime,
-                POD: pod.Pod.metadata.name,
-                'CPU': parseFloat((pod.CPU.CurrentUsage * 1024).toFixed(2)),
-                'MEMORY': parseFloat((mem / (1024 * 1024) * 10).toFixed(2)),
-            };
+            if(pod.Pod.metadata.name.split("-")[0] !== "istio" || pod.Pod.metadata.name.split("-")[0] !== "istiod") {
+                return {
+                    sentTime: sentTime,
+                    POD: pod.Pod.metadata.name,
+                    'CPU': parseFloat((pod.CPU.CurrentUsage * 1024).toFixed(2)),
+                    'MEMORY': parseFloat((mem / (1024 * 1024) * 10).toFixed(2)),
+                };
+            }
+
         });
         // console.table(podsColumns);
         const data = JSON.stringify(podsColumns, (key, value) =>
@@ -49,12 +52,13 @@ async function monitor() {
             console.log(`The "data to append" was appended to file! line: ${line}, datetime: ${sentTime}.`);
         });
         line++
-
-        fs.appendFile(`case-D-resouce-breakpoint-1.json`, data2 + "\r\n" , function (err) {
-            if (err) throw err;
-            console.log(`The "data to append" was appended to file! line: ${line}, datetime: ${sentTime}.`);
-        });
-        line++
+        if(data2.length > 0) {
+            fs.appendFile(`case-D-resouce-breakpoint-1.json`, data2 + "\r\n" , function (err) {
+                if (err) throw err;
+                console.log(`The "data to append" was appended to file! line: ${line}, datetime: ${sentTime}.`);
+            });
+            line++
+        }
     } catch (err) {
         console.error(err);
     }
