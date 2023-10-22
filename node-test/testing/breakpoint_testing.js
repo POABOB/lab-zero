@@ -6,7 +6,7 @@ import { getCurrentStageIndex } from 'https://jslib.k6.io/k6-utils/1.3.0/index.j
 // 每 10 秒增加 50 個 User，直到 RPS 到達 1000
 const stages = [];
 stages.push({ duration: '30s', target: 100 })
-for (let t = 50; t <= 2000; t += 100) {
+for (let t = 50; t <= 1600; t += 100) {
   stages.push({ duration: '5s', target: t }, { duration: '5s', target: t });
 }
 stages.push({ duration: '30s', target: 100 })
@@ -16,7 +16,7 @@ export const options = {
     scenarios: {
       breakpoint : {
         executor: 'ramping-arrival-rate',           // 指定時間內，執行次數可以變動，根據 stages
-        preAllocatedVUs: 300,                     // 執行前，預先準備 VUs 保留運行時的資源
+        preAllocatedVUs: 1200,                     // 執行前，預先準備 VUs 保留運行時的資源
         timeUnit: "1s",                             // 時間單位
         stages: stages                              // 執行的每次的目標 (持續時間、VU 數量)
       },
